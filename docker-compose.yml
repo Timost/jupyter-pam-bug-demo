@@ -1,0 +1,44 @@
+---
+
+services:
+  openssh-server:
+    image: lscr.io/linuxserver/openssh-server
+    container_name: openssh-server
+    hostname: openssh-server #optional
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London
+      - SUDO_ACCESS=true #optional
+      - PASSWORD_ACCESS=true #optional
+      - USER_PASSWORD=admin #optional
+      - USER_NAME=jupyterhub #optional
+    volumes:
+      - data:/shared-sshfs-data/
+    ports:
+      - 2222:2222
+    restart: unless-stopped
+    networks:
+      - custom
+  jupyterhub:
+    build:
+      context: ./jupyter
+      dockerfile: Dockerfile
+    image: jupybug:latest
+    depends_on:
+      - openssh-server
+    privileged: true # to be able to perform mount inside the docker container
+    environment:
+      - USER_NAME=jupyterhub
+      - USER_PASSWORD=admin
+    ports:
+      - 8000:8000
+    networks:
+      - custom
+
+volumes:
+  data:
+
+
+networks:
+  custom:
